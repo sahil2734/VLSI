@@ -1,0 +1,270 @@
+Without clk divisions:
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+use IEEE.std_logic_unsigned.all;
+
+
+entity lcd is
+   Port (   clk,rst : in  STD_LOGIC;
+	lcd_data : out STD_LOGIC_VECTOR (7 downto 0);
+	lcd_rw : out STD_LOGIC;
+ 	lcd_rs : out STD_LOGIC;
+ 	lcd_en : out STD_LOGIC);
+ end lcd;
+
+architecture Behavioral of lcd is
+	signal cnt : std_logic_vector(20 downto 0);
+		  signal clk : std_logic;
+		
+	type states is(rst_state,first_cwd,first_cwd1,second_cwd,second_cwd1,					third_cwd,third_cwd1,fourth_cwd,fourth_cwd1,
+	first_char,first_char1,second_char,second_char1,third_char,					third_char1,fourth_char,fourth_char1,fifth_char,fifth_char1,
+	sixth_char,sixth_char1,seventh_char,seventh_char1); 
+	 signal p_state,n_state: states;
+begin
+
+clk_div : process(mclk,rst)  -- system clk 
+ begin
+	if rst = '1' then
+		cnt <= (others => '0');
+	elsif mclk'event and mclk = '1' then
+		cnt <= cnt + '1';
+			if ( cnt = "011110100001001000000" ) then 
+				clk <= '1';
+				cnt <= (others =>'0');			
+			else 
+				clk <= '0';
+         			end if;
+	end if;
+ end process;
+
+mem_elemt:process(clk,rst)
+ begin
+	if rst = '1' then
+		p_state <= rst_state;
+	elsif clk'event and clk = '1' then
+		p_state <= n_state;
+	end if;
+end process;
+
+next_state:process(p_state)
+ begin
+   case p_state is	
+	when rst_state =>							
+		lcd_rw <= '0';
+		lcd_rs <= '0';
+		lcd_en <= '0';
+		n_state <= first_cwd;
+		lcd_data <= "00111100"; -- 3CH
+		when first_cwd =>
+			 lcd_rw <= '0';
+			lcd_rs <= '0';
+			lcd_en <= '1';
+			 n_state <= first_cwd1;
+			 lcd_data <= "00111100"; 
+		when first_cwd1 =>								
+			lcd_rw <= '0';
+			lcd_rs <= '0';
+			lcd_en <= '0';
+			  n_state <= second_cwd;
+			 lcd_data <= "00001100"; 
+		when second_cwd =>
+				lcd_rw <= '0';
+				lcd_rs <= '0';
+				lcd_en <= '1';
+			  n_state <= second_cwd1;
+			 lcd_data <= "00001100"; 
+		when second_cwd1 =>							-- 
+				lcd_rw <= '0';
+				lcd_rs <= '0';
+				lcd_en <= '0';
+			  n_state <= third_cwd;
+		    lcd_data <= "00000001"; -- 01H
+		when third_cwd =>
+				lcd_rw <= '0';
+				lcd_rs <= '0';
+				lcd_en <= '1';
+			  n_state <= third_cwd1;
+			 lcd_data <= "00000001";	 
+		when third_cwd1 =>							
+				lcd_rw <= '0';
+				lcd_rs <= '0';
+				lcd_en <= '0';
+			  n_state <= fourth_cwd;
+			 lcd_data <= "00000010"; 
+		when fourth_cwd =>
+				lcd_rw <= '0';
+				lcd_rs <= '0';
+				lcd_en <= '1';
+			  n_state <= fourth_cwd1;
+			 lcd_data <= "00000010"; 
+		when fourth_cwd1 =>							
+				lcd_rw <= '0';
+				lcd_rs <= '1';
+				lcd_en <= '0';
+			  n_state <= first_char;
+			 lcd_data <= "01010011";				
+
+		when first_char =>
+				lcd_rw <= '0';
+				lcd_rs <= '1';
+				lcd_en <= '1';
+			  n_state <= first_char1;
+			 lcd_data <= "01010011";				
+
+		when first_char1 =>							
+				lcd_rw <= '0';
+				lcd_rs <= '1';
+				lcd_en <= '0';
+			  n_state <= second_char;
+			 lcd_data <= "01001000"; 				
+		when second_char =>
+				lcd_rw <= '0';
+				lcd_rs <= '1';
+				lcd_en <= '1';
+			  n_state <= second_char1;
+			 lcd_data <= "01001000"; 				
+		when second_char1 =>							-- send 3rd Character Data
+				lcd_rw <= '0';
+				lcd_rs <= '1';
+				lcd_en <= '0';
+			  n_state <= third_char;
+			 lcd_data <= "01010101"; 			
+		when third_char =>
+				lcd_rw <= '0';
+				lcd_rs <= '1';
+				lcd_en <= '1';
+			  n_state <= third_char1;
+			 lcd_data <= "01010101"; 				
+		when third_char1 =>						
+				lcd_rw <= '0';
+				lcd_rs <= '1';
+				lcd_en <= '0';
+			  n_state <= fourth_char;
+			 lcd_data <= "01000010"; 				
+		when fourth_char =>
+				lcd_rw <= '0';
+				lcd_rs <= '1';
+				lcd_en <= '1';
+			  n_state <= fourth_char1;
+			 lcd_data <= "01000010";				
+		when fourth_char1 =>						
+				lcd_rw <= '0';
+				lcd_rs <= '1';
+				lcd_en <= '0';
+			  n_state <= fifth_char;
+			 lcd_data <= "01001000"; 				
+		when fifth_char =>
+				lcd_rw <= '0';
+				lcd_rs <= '1';
+				lcd_en <= '1';
+			  n_state <= fifth_char1;
+			 lcd_data <= "01001000"; 			
+		when fifth_char1 =>						
+				lcd_rw <= '0';			
+				lcd_rs <= '1';
+				lcd_en <= '0';
+			  n_state <= sixth_char;
+			 lcd_data <= "01000001"; 				
+		when sixth_char =>
+				lcd_rw <= '0';
+				lcd_rs <= '1';
+				lcd_en <= '1';
+			  n_state <= sixth_char1;
+			 lcd_data <= "01000001"; 		
+		when sixth_char1 =>							
+				lcd_rw <= '0';
+				lcd_rs <= '1';
+				lcd_en <= '0';
+			  n_state <= seventh_char;
+			 lcd_data <= "01001101"; 				
+
+		when seventh_char =>
+				lcd_rw <= '0';
+				lcd_rs <= '1';
+				lcd_en <= '1';
+			  n_state <= seventh_char1;
+			 lcd_data <= "01001101"; 				
+
+		when others => NULL;
+   end case;
+ end process;
+end Behavioral;
+
+
+---------------------------- Test Bench -------------------------------
+-- Experiment No. 5: To write VHDL code, simulate with test bench, synthesis, implement on PLC, LCD.
+---------------------------------------------------------------------------
+
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+ 
+ 
+ENTITY fortb_lcdtb2 IS
+END fortb_lcdtb2;
+ 
+ARCHITECTURE behavior OF fortb_lcdtb2 IS 
+ 
+    -- Component Declaration for the Unit Under Test (UUT)
+    COMPONENT lcd
+    PORT(
+         clk : IN  std_logic;
+         rst : IN  std_logic;
+         lcd_data : OUT  std_logic_vector(7 downto 0);
+         lcd_rw : OUT  std_logic;
+         lcd_rs : OUT  std_logic;
+         lcd_en : OUT  std_logic
+        );
+    END COMPONENT;
+ 
+ --Inputs
+   signal clk : std_logic := '0';
+   signal rst : std_logic := '0';
+
+ --Outputs
+   signal lcd_data : std_logic_vector(7 downto 0);
+   signal lcd_rw : std_logic;
+   signal lcd_rs : std_logic;
+   signal lcd_en : std_logic;
+
+  -- Clock period definitions
+   constant clk_period : time := 10 ns;
+BEGIN
+-- Instantiate the Unit Under Test (UUT)
+   uut: lcd PORT MAP (
+          clk => clk,
+          rst => rst,
+          lcd_data => lcd_data,
+          lcd_rw => lcd_rw,
+          lcd_rs => lcd_rs,
+          lcd_en => lcd_en
+        );
+
+   -- Clock process definitions
+   clk_process :process
+   begin
+		clk <= '0';
+		wait for clk_period/2;
+		clk <= '1';
+		wait for clk_period/2;
+   end process;
+ 
+   -- Stimulus process
+   stim_proc: process
+   begin		
+	rst <= '1';
+		wait for 10 ns;	
+	rst <= '0';
+		wait for 200 ns;
+      wait;
+   end process;
+END;
+
+
+
+
+
+
+
+
